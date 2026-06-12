@@ -1,46 +1,47 @@
 <?php
 
-require("../php/database.php"); // database connection
+require("../php/database.php");
 session_start();
+
 $full_name = $_POST['full_name'];
 $email = $_POST['email'];
 $phone = $_POST['phone'];
-
 $address = $_POST['address'];
 $password = $_POST['password'];
 $confirm_password = $_POST['confirm_password'];
 
-if($password == $confirm_password)
-  {
-     $check_table = $db->query("SHOW TABLES LIKE 'users'");
+if($password != $confirm_password)
+{
+    echo "password not match";
+    exit();
+}
 
-     if($check_table->num_rows == 0)
-     {
-       $create_table = $db->query("CREATE TABLE users(
-        
+$check_table = $db->query("SHOW TABLES LIKE 'users'");
+
+if($check_table->num_rows == 0)
+{
+    $db->query("
+    CREATE TABLE users(
         id INT AUTO_INCREMENT PRIMARY KEY,
         full_name VARCHAR(100) NOT NULL,
         email VARCHAR(100) NOT NULL UNIQUE,
         phone VARCHAR(100) NOT NULL,
         otp VARCHAR(100) NOT NULL,
-        adress TEXT,
+        address TEXT,
         password VARCHAR(255) NOT NULL,
         create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ");
+}
 
-     )");
-     }
-
-  }
-
-
- $check_email = $db->query("SELECT * FROM users WHERE email = '$email'");
+$check_email = $db->query("SELECT * FROM users WHERE email='$email'");
 
 if($check_email->num_rows > 0)
 {
     echo "Email already exists";
+    exit();
 }
-else
-{
+
     $pattern = "1234567890";
         $length = strlen($pattern);
         $otp = [];
@@ -55,37 +56,70 @@ else
         $otp_f = implode($otp);
 
 
+$subject = "OTP Verification";
 
-        $sent_otp = mail($email,"OTP VERIFICATION",$otp_f,"FROM: deepakharisharma0000@gmail.com");
-        if($sent_otp)
-        {
-             $insert = $db->query("
-        INSERT INTO users
-        (full_name, email, phone, otp, address, password)
-        VALUES
-        (
-            '$full_name',
-            '$email',
-            '$phone',
-            '$otp_f',
-            '$address',
-            '$password'
-        )
-    ");
+$message = "
+<html>
+<head>
+<title>OTP Verification</title>
+</head>
+<body style='font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;'>
+    <div style='max-width:500px;margin:auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.1);'>
+        
+        <h2 style='color:#0d6efd;text-align:center;'>Email Verification</h2>
+        
+        <p>Hello <b>$full_name</b>,</p>
+        
+        <p>Your OTP for account verification is:</p>
+        
+        <h1 style='text-align:center;color:#dc3545;'>$otp_f</h1>
+        
+        <p>This OTP is valid for a short time only.</p>
+        
+        <hr>
+        
+        <p style='text-align:center;color:#777;'>
+            Coach4U Shop
+        </p>
+    </div>
+</body>
+</html>
+";
 
-    if ($insert) {
-        echo "success";
-        $_SESSION['user_email'] = $email;
-    } else {
-        echo "Insert Failed: " . $db->error;
-    }
+$headers  = "MIME-Version: 1.0\r\n";
+$headers .= "Content-type:text/html;charset=UTF-8\r\n";
+$headers .= "From:deepakharisharma0000@gmail.com\r\n";
 
-        }
-        else
-        {
-            echo "failed";       
-        }
+$sent_otp = mail($email,$subject,$message,$headers);
 
+if(!$sent_otp)
+{
+    echo "OTP send failed";
+    exit();
 }
+else{
+$insert = $db->query("
+INSERT INTO users
+(full_name,email,phone,otp,address,password)
+VALUES
+(
+    '$full_name',
+    '$email',
+    '$phone',
+    '$otp_f',
+    '$address',
+    '$password'
+)
+");
 
+if($insert)
+{
+    $_SESSION['user_email'] = $email;
+    echo "success";
+}
+else
+{
+    echo "Insert Failed : ".$db->error;
+}
+}
 ?>

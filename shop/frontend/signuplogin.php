@@ -44,34 +44,34 @@
 
                 <div class="mb-3">
                     <label class="form-label">Full Name</label>
-                    <input type="text" name="full_name"  id="full_name"class="form-control" placeholder="Enter Full Name">
+                    <input type="text" name="full_name"  id="full_name"class="form-control" placeholder="Enter Full Name" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Email Address</label>
-                    <input type="email" name="email"  id="email"class="form-control" placeholder="Enter Email">
+                    <input type="email" name="email"  id="email"class="form-control" placeholder="Enter Email" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Phone Number</label>
-                    <input type="number" name="phone"id="phone" class="form-control" placeholder="Enter Mobile Number">
+                    <input type="number" name="phone"id="phone" class="form-control" placeholder="Enter Mobile Number" required>
                 </div>
 
              
 
                 <div class="mb-3">
                     <label class="form-label">Address</label>
-                    <textarea name="address" id="address"class="form-control" rows="3" placeholder="Enter Address"></textarea>
+                    <textarea name="address" id="address"class="form-control" rows="3" placeholder="Enter Address" required></textarea>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Password</label>
-                    <input type="password"id="password" name="password" class="form-control" placeholder="Create Password">
+                    <input type="password"id="password" name="password" class="form-control" placeholder="Create Password" required>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label d-none">Confirm Password</label>
-                    <input type="password"id="confirm_password" name="confirm_password" class="form-control d-none" placeholder="Confirm Password">
+                    <label class="form-label ">Confirm Password</label>
+                    <input type="password"id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirm Password" required>
                 </div>
 
             </div>
@@ -95,6 +95,7 @@
         <center>
           <h3 class="mb-4">OTP Verification</h3>
         </center>
+        <h5>check otp in your email</h5>
 
         <div class="mb-3">
           <input type="number" id="verify_otp" class="form-control" placeholder="Enter OTP">
@@ -117,51 +118,50 @@
 
 
  $(document).ready(function(){
-  $("#signupfrom").submit(function(e)
-  {
+  $("#signupfrom").submit(function(e){
+
     e.preventDefault();
+
     $.ajax({
-       type : "POST",
-            url : "../frontend/php/signup.php",
-           data : new FormData(this),
-            processData : false,
-            contentType : false,
+        type : "POST",
+        url : "../frontend/php/signup.php",
+        data : new FormData(this),
+        processData : false,
+        contentType : false,
 
-            success:function(response){
-            
-               if (response.trim() == "Email already exists")
-               { 
+        success:function(response){
 
-                       Swal.fire({
+            if(response.trim() == "password not match")
+            {
+                $("#next_btn").attr("disabled", true);
 
-          title:'Error',
-          text:'email exists',
-          icon:'error'
-
-        });
-                      $("#next_btn").attr("disabled","");
-                   
-               }
-               else{
                 Swal.fire({
-                    
-
-                    icon : "success",
-                    title : "success",
-                    text : "otp send check your email"
-
+                    icon: "error",
+                    title: "Error",
+                    text: "Password Not Match"
                 });
-                $(".signup-div").addClass("d-none");
-                   $(".otp-div").removeClass("d-none");
-
-
-
-               }
             }
-    })
+            else if(response.trim() == "Email already exists")
+            {
+                $("#next_btn").attr("disabled", true);
 
-  })
-  
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Email Already Exists"
+                });
+            }
+            else if(response.trim() == "success")
+            {
+                $("#next_btn").attr("disabled", false);
+
+                $(".signup-div").addClass("d-none");
+                $(".otp-div").removeClass("d-none");
+            }
+        }
+    });
+
+});
     $("#submit_btn").click(function(e){
 
     e.preventDefault();
